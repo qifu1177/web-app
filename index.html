@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="//cdn.muicss.com/mui-0.9.39/css/mui.min.css">
+    <script type="text/javascript"
+            src="//code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript"
+            src="//ajax.googleapis.com/ajax/libs/angularjs/1.6.10/angular.min.js"></script>
+    <script type="text/javascript"
+            src="js/globalize.min.js"></script>
+    <script type="text/javascript"
+            src="js/app.js"></script>
+    <script type="text/javascript"
+            src="js/main.js"></script>
+    <title>APP</title>
+</head>
+
+<body style="padding: 10px;margin: 0px;" data-ng-app="app">
+<div class="mui-container-fluid" data-ng-controller="webCtr">
+    <div ng-if="loadedconfig=='1'">
+        <div ng-include="'htmls/localization/'+all.language+'.html'+all.version"></div>
+        <div ng-if="all.startload=='1'">
+            <div class="body-container">
+                <div class="mui-row">
+                    <div class="mui-col-xs-6 mui-col-md-1" style="height: 36px; padding-top: 15px;"><span
+                            ng-bind="'language'|t:cul"></span></div>
+                    <div class="mui-col-xs-6 mui-col-md-2 mui-select">
+                        <select ng-model="all.language">
+                            <option value="{{t.value}}" ng-repeat="t in all.languagelist"
+                                    ng-bind="t.text|t:cul"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mui-row">
+                    <div class="mui-col-xs-6 mui-col-md-1" style="height: 36px; padding-top: 15px;"><span
+                            ng-bind="'connectionstring'|t:cul"></span></div>
+                    <div class="mui-col-xs-6 mui-col-md-9 mui-textfield">
+                        <input type="text" ng-model="all.connectionstring" required>
+                    </div>
+                </div>
+                <div class="mui-row">
+                    <div class="mui-col-xs-6 mui-col-md-2">
+                        <table cellspacing="0" cellpadding="0">
+                            <tr>
+                                <td>
+                                    <div class="mui-btn mui-btn--raised" ng-click="saveconfig()"
+                                         ng-bind="'bt-save'|t:cul"></div>
+                                </td>
+                                <td>
+                                    <img style="width: 64px;height: 64px;" ng-hide="noSave" src="images/loading.gif">
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <!--load test hatml-->
+                <div ng-include="'htmls/test.html'+all.version"
+                     style="padding-top: 20px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+<iframe id="download-fram1" style="display:none;"></iframe>
+<script type="text/javascript">
+    angular.module('app', ['app.help', 'app.control'])
+            .config(function () {
+            })
+            .run(['$rootScope', '$location', function ($rootScope, $location) {
+                var original = $location.path;
+                $location.path = function (path, reload) {
+                    if (reload === false) {
+                        var un = $rootScope.$on('$locationChangeSuccess', function () {
+                            un();
+                        });
+                    }
+                    return original.apply($location, [path]);
+                };
+            }])
+            .controller('webCtr', function ($rootScope, $scope, server) {
+                $scope.loadedconfig = '0';
+                $rootScope.$on('changeLanguage', function (event, args) {
+                    //$scope.$apply();
+                    $rootScope.all.startload = '1';
+                    $rootScope.cul = $rootScope.all.language;
+                });
+                $scope.noSave = true;
+                $scope.saveconfig = function () {
+                    $scope.noSave = false;
+                    server.save('setting', 'config', angular.toJson({
+                                'language': $rootScope.cul,
+                                'connectionstring': $rootScope.all.connectionstring
+                            })
+                    ).then(function (r) {
+                                $scope.noSave = true;
+                            }, function (r) {
+                                $scope.noSave = true;
+                                alert(r.data);
+                            });
+
+                };
+                $scope.loadconfig = function () {
+                    server.load('setting', 'config', {}
+                    ).then(function (r) {
+                                var config = r.data;
+                                $rootScope.cul = config.language;
+                                $rootScope.all = config;
+                                $rootScope.all.version = "?" + config.version;
+                                $rootScope.all.startload = '0';
+                                $scope.loadedconfig = '1';
+                                root.$rootScope = $rootScope;
+                            }, function (r) {
+                                alert(r.data);
+                            });
+
+                };
+                //debugger;
+                $scope.loadconfig();
+            });
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<iframe id="myframe" src="https://dict.leo.org/chinesisch-deutsch/" style="width:800px;height: 800px;"></iframe>
+
+<p>Click the button to change the background color of the document contained in the iframe.</p>
+
+<p id="demo"></p>
+
+<button onclick="myFunction()">Try it</button>
+
+<script>
+    function myFunction() {
+        var x = document.getElementById("myframe");
+        var y = (x.contentWindow || x.contentDocument);
+        if (y.document)y = y.document;
+        var p =document.getElementById("demo");
+        p.innerHTML =y.body.innerHTML;
+    }
+</script>
+
+</body>
+</html>
